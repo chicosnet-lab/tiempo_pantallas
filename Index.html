@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenScreen - Bienestar Digital</title>
+    <style>
+        /* =========================================================
+           VARIABLES DE CSS - Paleta de colores suaves y minimalistas
+           ========================================================= */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+
+        :root {
+            /* Colores de fondo y texto */
+            --bg-color: #F4F7F6;
+            --text-main: #2C3E50;
+            --text-muted: #7F8C8D;
+            --card-bg: #FFFFFF;
+            
+            /* Colores de las categorías (Tonos pastel) */
+            --cat-social: #FFB7B2; /* Rosa pastel */
+            --cat-games: #B5EAD7;  /* Verde menta pastel */
+            --cat-ai: #C7CEEA;     /* Lavanda pastel */
+            --cat-web: #E2F0CB;    /* Verde lima muy suave */
+
+            /* Colores de las emociones (Para el gráfico) */
+            --emo-felicidad: #FFD54F;
+            --emo-indiferencia: #E0E0E0;
+            --emo-tristeza: #64B5F6;
+            --emo-enojo: #E57373;
+            --emo-entusiasmo: #FF8A65;
+
+            /* Sombras y bordes */
+            --shadow: 0 8px 20px rgba(0,0,0,0.05);
+            --border-radius: 20px;
+        }
+
+        /* =========================================================
+           ESTILOS GENERALES
+           ========================================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px; /* Formato celular */
+            background-color: var(--bg-color);
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Vistas (Pantallas) */
+        .view {
+            display: none;
+            padding: 30px 20px;
+            animation: fadeIn 0.4s ease-in-out;
+            flex: 1;
+        }
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        h2.subtitle {
+            font-size: 16px;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 400;
+            margin-bottom: 30px;
+        }
+
+        /* =========================================================
+           PANTALLA 1: MIS METAS (CONFIGURACIÓN)
+           ========================================================= */
+        .input-group {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group input {
+            width: 70px;
+            padding: 8px;
+            border: 2px solid #EEE;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #A3B1C6;
+        }
+
+        .btn-primary {
+            background-color: var(--text-main);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s, background 0.3s;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* =========================================================
+           PANTALLA 2: MONITOREO
+           ========================================================= */
+        .monitor-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.3s;
+        }
+
+        .monitor-card.active-card {
+            transform: scale(1.02);
+            border: 2px solid var(--text-main);
+        }
+
+        .play-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .play-btn:hover { background-color: #E0E5EC; }
+        .play-btn.playing { background-color: var(--text-main); color: white; }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .time-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Barra de progreso */
+        .progress-bar-bg {
+            width: 100%;
+            height: 10px;
+            background-color: #F0F0F0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 5px;
+            transition: width 1s linear, background-color 0.3s;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 2px solid #E0E5EC;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        /* =========================================================
+           VENTANA EMERGENTE (REFLEXIÓN)
+           ========================================================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px 20px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-content h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .modal-content p {
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
+        .emojis-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .emoji-btn {
+            background: var(--bg-color);
+            border: none;
+            font-size: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .emoji-btn:hover, .emoji-btn:active {
+            transform: scale(1.1);
+            background: #E0E5EC;
+        }
+
+        /* =========================================================
+           ESTADÍSTICAS (GRÁFICO APILADO)
+           ========================================================= */
+        .stats-summary {
+            text-align: center;
+            margin-bottom: 30px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .stats-summary h3 { font-size: 32px; color: var(--text-main); }
+        .stats-summary p { color: var(--text-muted); font-size: 14px; }
+
+        .chart-container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            height: 250px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding-bottom: 40px; /* Espacio para etiquetas */
+            position: relative;
+        }
+
+        .chart-bar-group {
+            width: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse; /* Apilar de abajo hacia arriba */
+            position: relative;
+        }
+
+        .chart-segment {
+            width: 100%;
+            transition: height 0.5s;
+        }
+
+        /* Etiquetas del eje X */
+        .chart-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            white-space: nowrap;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- ==========================================
+             PANTALLA 1: CONFIGURACIÓN (Mis Metas)
+             ========================================== -->
+        <section id="view-setup" class="view">
+            <h1>Mis metas</h1>
+            <h2 class="subtitle">Configura tus límites del día (en minutos)</h2>
+
+            <div class="input-group">
+                <label>📱 Redes sociales</label>
+                <input type="number" id="limit-social" min="1" value="30">
+            </div>
+            <div class="input-group">
+                <label>🎮 Videojuegos</label>
+                <input type="number" id="limit-games" min="1" value="60">
+            </div>
+            <div class="input-group">
+                <label>🤖 IA (Chatbots)</label>
+                <input type="number" id="limit-ai" min="1" value="20">
+            </div>
+            <div class="input-group">
+                <label>🌐 Navegación web</label>
+                <input type="number" id="limit-web" min="1" value="45">
+            </div>
+
+            <button class="btn-primary" onclick="guardarMetas()">Guardar</button>
+        </section>
+
+        <!-- ==========================================
+             PANTALLA 2: MONITOREO
+             ========================================== -->
+        <section id="view-monitor" class="view">
+            <h1>Monitoreo</h1>
+            <h2 class="subtitle">Sé consciente de tu tiempo</h2>
+
+            <div id="monitor-list">
+                <!-- Las tarjetas se generan dinámicamente con JS -->
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn-secondary" onclick="resetearDia()">🔄 Reiniciar día</button>
+                <button class="btn-secondary" onclick="mostrarVista('view-stats')">📊 Estadísticas</button>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             PANTALLA 3: ESTADÍSTICAS
+             ========================================== -->
+        <section id="view-stats" class="view">
+            <h1>Tu balance</h1>
+            <h2 class="subtitle">Reflexiona sobre tu día</h2>
+
+            <div class="stats-summary">
+                <p>Tiempo total de uso</p>
+                <h3 id="total-time-display">00:00</h3>
+            </div>
+
+            <!-- Gráfico de barras apiladas (Construido con Flexbox) -->
+            <div class="chart-container" id="chart-container">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <!-- Leyenda del gráfico -->
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background: var(--emo-felicidad)"></div>Felicidad</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--emo-indiferencia)"></div>Indiferencia</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--emo-tristeza)"></div>Tristeza</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--emo-enojo)"></div>Enojo</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--emo-entusiasmo)"></div>Entusiasmo</div>
+            </div>
+
+            <button class="btn-primary" onclick="mostrarVista('view-monitor')" style="margin-top: 30px;">Volver al Monitoreo</button>
+        </section>
+
+        <!-- ==========================================
+             VENTANA EMERGENTE: REFLEXIÓN
+             ========================================== -->
+        <div class="modal-overlay" id="reflection-modal">
+            <div class="modal-content">
+                <h3>Tiempo de reflexión</h3>
+                <p id="reflection-question">¿Cuál fue tu estado de ánimo al usar ...?</p>
+                <div class="emojis-container">
+                    <button class="emoji-btn" title="Felicidad" onclick="registrarEmocion('felicidad')">😀</button>
+                    <button class="emoji-btn" title="Entusiasmo" onclick="registrarEmocion('entusiasmo')">🤩</button>
+                    <button class="emoji-btn" title="Indiferencia" onclick="registrarEmocion('indiferencia')">😐</button>
+                    <button class="emoji-btn" title="Tristeza" onclick="registrarEmocion('tristeza')">😢</button>
+                    <button class="emoji-btn" title="Enojo" onclick="registrarEmocion('enojo')">😠</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================
+         LÓGICA DE JAVASCRIPT
+         ========================================== -->
+    <script>
+        // --- 1. CONFIGURACIÓN INICIAL Y ESTADO ---
+
+        // Definición de las categorías con sus colores y emojis correspondientes
+        const categoriasInfo = {
+            social: { id: 'social', nombre: 'Redes sociales', emoji: '📱', color: 'var(--cat-social)' },
+            games: { id: 'games', nombre: 'Videojuegos', emoji: '🎮', color: 'var(--cat-games)' },
+            ai: { id: 'ai', nombre: 'IA (Chatbots)', emoji: '🤖', color: 'var(--cat-ai)' },
+            web: { id: 'web', nombre: 'Navegación web', emoji: '🌐', color: 'var(--cat-web)' }
+        };
+
+        const coloresEmociones = {
+            felicidad: 'var(--emo-felicidad)',
+            indiferencia: 'var(--emo-indiferencia)',
+            tristeza: 'var(--emo-tristeza)',
+            enojo: 'var(--emo-enojo)',
+            entusiasmo: 'var(--emo-entusiasmo)'
+        };
+
+        // Estructura de datos principal de la aplicación
+        let appData = {
+            setupCompleto: false,
+            limites: { social: 0, games: 0, ai: 0, web: 0 }, // Guardado en segundos
+            tiempoUsado: { social: 0, games: 0, ai: 0, web: 0 }, // Guardado en segundos
+            emociones: {
+                social: { felicidad: 0, indiferencia: 0, tristeza: 0, enojo: 0, entusiasmo: 0 },
+                games: { felicidad: 0, indiferencia: 0, tristeza: 0, enojo: 0, entusiasmo: 0 },
+                ai: { felicidad: 0, indiferencia: 0, tristeza: 0, enojo: 0, entusiasmo: 0 },
+                web: { felicidad: 0, indiferencia: 0, tristeza: 0, enojo: 0, entusiasmo: 0 }
+            }
+        };
+
+        // Variables de control del temporizador
+        let categoriaActiva = null; // ID de la categoría actualmente corriendo
+        let intervaloTimer = null;
+        let categoriaEnReflexion = null; // ID de la categoría esperando respuesta en el popup
+
+        // --- 2. INICIALIZACIÓN ---
+        window.onload = () => {
+            cargarDatos();
+            if (appData.setupCompleto) {
+                renderizarMonitoreo();
+                mostrarVista('view-monitor');
+            } else {
+                mostrarVista('view-setup');
+            }
+        };
+
+        // Carga los datos guardados en el navegador
+        function cargarDatos() {
+            const guardado = localStorage.getItem('zenScreenData');
+            if (guardado) {
+                appData = JSON.parse(guardado);
+            }
+        }
+
+        // Guarda los datos en el navegador
+        function guardarDatos() {
+            localStorage.setItem('zenScreenData', JSON.stringify(appData));
+        }
+
+        // Navegación entre pantallas
+        function mostrarVista(idVista) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(idVista).classList.add('active');
+            
+            if (idVista === 'view-stats') {
+                generarEstadisticas();
+            }
+        }
+
+        // --- 3. PANTALLA 1: MIS METAS ---
+        function guardarMetas() {
+            // Obtener valores, convertir minutos a segundos (multiplicando por 60)
+            appData.limites.social = (document.getElementById('limit-social').value || 30) * 60;
+            appData.limites.games = (document.getElementById('limit-games').value || 60) * 60;
+            appData.limites.ai = (document.getElementById('limit-ai').value || 20) * 60;
+            appData.limites.web = (document.getElementById('limit-web').value || 45) * 60;
+            
+            appData.setupCompleto = true;
+            guardarDatos();
+            
+            renderizarMonitoreo();
+            mostrarVista('view-monitor');
+        }
+
+        // --- 4. PANTALLA 2: MONITOREO Y TEMPORIZADOR ---
+
+        // Genera el HTML de las tarjetas de categorías dinámicamente
+        function renderizarMonitoreo() {
+            const contenedor = document.getElementById('monitor-list');
+            contenedor.innerHTML = '';
+
+            Object.keys(categoriasInfo).forEach(key => {
+                const cat = categoriasInfo[key];
+                const limite = appData.limites[key];
+                const usado = appData.tiempoUsado[key];
+                const porcentaje = Math.min((usado / limite) * 100, 100);
+
+                const div = document.createElement('div');
+                div.className = 'monitor-card';
+                div.id = `card-${key}`;
+
+                div.innerHTML = `
+                    <button class="play-btn" id="btn-${key}" onclick="toggleTimer('${key}')">▶</button>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <span>${cat.emoji} ${cat.nombre}</span>
+                            <span class="time-text" id="time-${key}">${formatoTiempo(usado)} / ${formatoTiempo(limite)}</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="bar-${key}" style="width: ${porcentaje}%; background-color: ${cat.color};"></div>
+                        </div>
+                    </div>
+                `;
+                contenedor.appendChild(div);
+            });
+            actualizarUIActiva();
+        }
+
+        // Convierte segundos a formato MM:SS
+        function formatoTiempo(segundosTotales) {
+            const m = Math.floor(segundosTotales / 60);
+            const s = segundosTotales % 60;
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        // Lógica principal de Play / Pausa
+        function toggleTimer(key) {
+            // Si la categoría ya superó su límite, no permitir continuar
+            if (appData.tiempoUsado[key] >= appData.limites[key]) {
+                alert('Ya has alcanzado el límite para esta categoría. ¡Es momento de desconectar!');
+                return;
+            }
+
+            // Si el usuario presiona el botón de la categoría que ya está corriendo (PAUSA manual)
+            if (categoriaActiva === key) {
+                pausarTemporizador();
+                abrirReflexion(key);
+            } 
+            // Si el usuario presiona otra categoría
+            else {
+                // Si había otra corriendo, la pausamos automáticamente y abrimos reflexión para esa
+                if (categoriaActiva) {
+                    const anterior = categoriaActiva;
+                    pausarTemporizador();
+                    abrirReflexion(anterior);
+                    // Importante: No iniciamos la nueva automáticamente.
+                    // El usuario debe reflexionar primero y luego darle play a la nueva.
+                } else {
+                    // Si no había nada corriendo, simplemente iniciamos esta
+                    iniciarTemporizador(key);
+                }
+            }
+        }
+
+        function iniciarTemporizador(key) {
+            categoriaActiva = key;
+            actualizarUIActiva();
+            
+            intervaloTimer = setInterval(() => {
+                appData.tiempoUsado[categoriaActiva]++;
+                actualizarProgresoUI(categoriaActiva);
+                
+                // Comprobar si alcanzó el límite
+                if (appData.tiempoUsado[categoriaActiva] >= appData.limites[categoriaActiva]) {
+                    const finalizado = categoriaActiva;
+                    pausarTemporizador();
+                    reproducirAlarma();
+                    abrirReflexion(finalizado);
+                }
+                
+                // Guardar cada pocos segundos para no perder data si se cierra repentinamente
+                if(appData.tiempoUsado[categoriaActiva] % 5 === 0) guardarDatos(); 
+                
+            }, 1000); // 1000ms = 1 segundo
+        }
+
+        function pausarTemporizador() {
+            clearInterval(intervaloTimer);
+            categoriaActiva = null;
+            actualizarUIActiva();
+            guardarDatos();
+        }
+
+        // Actualiza los textos y las barras de progreso en la pantalla
+        function actualizarProgresoUI(key) {
+            const usado = appData.tiempoUsado[key];
+            const limite = appData.limites[key];
+            const porcentaje = Math.min((usado / limite) * 100, 100);
+            
+            document.getElementById(`time-${key}`).innerText = `${formatoTiempo(usado)} / ${formatoTiempo(limite)}`;
+            document.getElementById(`bar-${key}`).style.width = `${porcentaje}%`;
+        }
+
+        // Cambia visualmente el botón de Play a Pausa y resalta la tarjeta activa
+        function actualizarUIActiva() {
+            Object.keys(categoriasInfo).forEach(key => {
+                const btn = document.getElementById(`btn-${key}`);
+                const card = document.getElementById(`card-${key}`);
+                
+                if (categoriaActiva === key) {
+                    btn.innerText = '⏸';
+                    btn.classList.add('playing');
+                    card.classList.add('active-card');
+                } else {
+                    btn.innerText = '▶';
+                    btn.classList.remove('playing');
+                    card.classList.remove('active-card');
+                }
+            });
+        }
+
+        // Generador de sonido sintético suave (API Web Audio)
+        function reproducirAlarma() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                // Configuración de un tono suave y agradable (onda senoidal)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, ctx.currentTime); // Nota A4
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.5); // Sube a A5
+
+                // Envolvente de volumen (Fade in rápido, Fade out lento)
+                gainNode.gain.setValueAtTime(0, ctx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
+
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 1.5);
+            } catch(e) {
+                console.log("El navegador bloqueó el audio automático.");
+            }
+        }
+
+        // --- 5. SISTEMA DE REFLEXIÓN ---
+        function abrirReflexion(key) {
+            categoriaEnReflexion = key;
+            const nombre = categoriasInfo[key].nombre;
+            document.getElementById('reflection-question').innerText = `¿Cuál fue tu estado de ánimo al usar ${nombre}?`;
+            document.getElementById('reflection-modal').classList.add('show');
+        }
+
+        function registrarEmocion(emocion) {
+            if (categoriaEnReflexion) {
+                // Sumar 1 a la cuenta de esa emoción específica en esa categoría
+                appData.emociones[categoriaEnReflexion][emocion]++;
+                guardarDatos();
+            }
+            // Cerrar modal
+            document.getElementById('reflection-modal').classList.remove('show');
+            categoriaEnReflexion = null;
+        }
+
+        // --- 6. PANTALLA 3: ESTADÍSTICAS ---
+        function generarEstadisticas() {
+            let tiempoTotal = 0;
+            const chartContainer = document.getElementById('chart-container');
+            chartContainer.innerHTML = '';
+
+            // Calcular tiempo total
+            Object.values(appData.tiempoUsado).forEach(t => tiempoTotal += t);
+            
+            // Mostrar horas y minutos totales
+            const horas = Math.floor(tiempoTotal / 3600);
+            const minutos = Math.floor((tiempoTotal % 3600) / 60);
+            document.getElementById('total-time-display').innerText = 
+                `${horas}h ${minutos.toString().padStart(2, '0')}m`;
+
+            // Construir gráfico de barras apiladas usando elementos HTML (DOM)
+            Object.keys(categoriasInfo).forEach(key => {
+                const emocionesCat = appData.emociones[key];
+                
+                // Contar total de registros de emociones para esta categoría
+                let totalRegistros = 0;
+                Object.values(emocionesCat).forEach(v => totalRegistros += v);
+
+                // Crear el grupo de la barra (columna flex)
+                const barGroup = document.createElement('div');
+                barGroup.className = 'chart-bar-group';
+
+                // Añadir etiqueta (emoji) en el eje X
+                const label = document.createElement('div');
+                label.className = 'chart-label';
+                label.innerText = categoriasInfo[key].emoji;
+                barGroup.appendChild(label);
+
+                // Si hay registros, crear los segmentos apilados
+                if (totalRegistros > 0) {
+                    Object.keys(emocionesCat).forEach(emocion => {
+                        const count = emocionesCat[emocion];
+                        if (count > 0) {
+                            const porcentaje = (count / totalRegistros) * 100;
+                            const segment = document.createElement('div');
+                            segment.className = 'chart-segment';
+                            segment.style.height = `${porcentaje}%`;
+                            segment.style.backgroundColor = coloresEmociones[emocion];
+                            segment.title = `${emocion}: ${count} veces`;
+                            barGroup.appendChild(segment);
+                        }
+                    });
+                } else {
+                    // Barra vacía gris suave si no hay datos
+                    const empty = document.createElement('div');
+                    empty.className = 'chart-segment';
+                    empty.style.height = '100%';
+                    empty.style.backgroundColor = '#F0F0F0';
+                    barGroup.appendChild(empty);
+                }
+
+                chartContainer.appendChild(barGroup);
+            });
+        }
+
+        // Función extra para poder reiniciar el día sin perder la app
+        function resetearDia() {
+            if(confirm("¿Estás seguro que deseas reiniciar tus tiempos y emociones del día? Las metas se mantendrán.")) {
+                pausarTemporizador();
+                
+                // Reiniciar tiempos y emociones
+                Object.keys(appData.tiempoUsado).forEach(k => appData.tiempoUsado[k] = 0);
+                Object.keys(appData.emociones).forEach(cat => {
+                    Object.keys(appData.emociones[cat]).forEach(emo => appData.emociones[cat][emo] = 0);
+                });
+                
+                guardarDatos();
+                renderizarMonitoreo();
+                alert("Día reiniciado. ¡Un nuevo comienzo!");
+            }
+        }
+    </script>
+</body>
+</html>
